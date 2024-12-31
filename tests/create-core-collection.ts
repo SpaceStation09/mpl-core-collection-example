@@ -2,6 +2,7 @@ import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import { CreateCoreCollection } from "../target/types/create_core_collection";
 import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
+import { PublicKey } from "@solana/web3.js";
 import {
   fetchAsset,
   fetchCollection,
@@ -58,23 +59,29 @@ describe("create-core-collection", () => {
       })
       .signers([asset])
       .rpc();
-    const assetInfo = await fetchAsset(umi, asset.publicKey.toBase58());
+    // const assetInfo = await fetchAsset(umi, asset.publicKey.toBase58());
   });
 
-  // it("Cannot transfer", async () => {
-  //   const asset = anchor.web3.Keypair.generate();
-  //   await program.methods
-  //     .createAsset({ name: "My asset 2", uri: "https://asset2.example.com" })
-  //     .accounts({
-  //       asset: asset.publicKey,
-  //       collection: collection.publicKey,
-  //       authority: null,
-  //       payer: anchor.getProvider().publicKey,
-  //       owner: null,
-  //       updateAuthority: null,
-  //     })
-  //     .signers([asset])
-  //     .rpc();
+  it("Cannot transfer", async () => {
+    const asset = anchor.web3.Keypair.generate();
+    await program.methods
+      .createAsset({ name: "My asset 2", uri: "https://asset2.example.com" })
+      .accounts({
+        asset: asset.publicKey,
+        collection: collection.publicKey,
+        authority: null,
+        payer: anchor.getProvider().publicKey,
+        owner: null,
+        updateAuthority: null,
+      })
+      .signers([asset])
+      .rpc();
 
-  // });
+    const newOwner = anchor.web3.Keypair.generate();
+    //FIXME: expect to fail but we don't have corresponding oracle on localnet yet
+    await program.methods.transfer().accounts({
+      asset: asset.publicKey,
+      newOwner: newOwner.publicKey,
+    });
+  });
 });
